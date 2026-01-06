@@ -2,20 +2,37 @@
 
 Dashboard interativo em Streamlit para visualização das atividades do time.
 
-## 🚀 Como executar
+## 🚀 Como executar localmente
 
 ### 1. Instalar dependências
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Rodar o dashboard
+### 2. Adicionar dados
+Coloque o arquivo CSV exportado do Jira na pasta `data/`:
+```
+jira_dashboard/
+├── app.py
+├── data/
+│   └── seu_arquivo.csv   ← Coloque aqui
+├── requirements.txt
+└── README.md
+```
+
+### 3. Rodar o dashboard
 ```bash
 streamlit run app.py
 ```
 
-### 3. Acessar no navegador
-O Streamlit vai abrir automaticamente em `http://localhost:8501`
+O dashboard carrega automaticamente o arquivo CSV mais recente da pasta `data/`.
+
+## ☁️ Deploy no Streamlit Cloud
+
+1. Suba o projeto para o GitHub
+2. Acesse [share.streamlit.io](https://share.streamlit.io)
+3. Conecte seu repositório
+4. Deploy!
 
 ## 📈 KPIs Disponíveis
 
@@ -42,10 +59,9 @@ project = TwoBetter AND issuetype in (Task, Subtask) ORDER BY created DESC
 
 Depois clique em **Export → CSV (Current fields)**
 
-## ⚠️ Observação
+## 🔄 Atualizando dados
 
-O CSV atual não contém campos de **horas trabalhadas** ou **story points**. 
-Para adicionar essas métricas, exporte esses campos do Jira:
-- Original Estimate
-- Time Spent
-- Story Points
+Para atualizar o dashboard com novos dados:
+1. Exporte um novo CSV do Jira
+2. Substitua o arquivo na pasta `data/`
+3. O dashboard recarrega automaticamente (ou pressione `R` no browser)

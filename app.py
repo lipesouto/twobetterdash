@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from pathlib import Path
+import os
 
 # Configuração da página
 st.set_page_config(
@@ -33,10 +35,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Função para encontrar o CSV mais recente na pasta data
+def get_latest_csv():
+    data_dir = Path(__file__).parent / "data"
+    
+    if not data_dir.exists():
+        return None
+    
+    csv_files = list(data_dir.glob("*.csv"))
+    
+    if not csv_files:
+        return None
+    
+    # Retorna o mais recente por data de modificação
+    latest_file = max(csv_files, key=lambda x: x.stat().st_mtime)
+    return latest_file
+
 # Função para carregar e processar dados
 @st.cache_data
-def load_data(file):
-    df = pd.read_csv(file, encoding='utf-8-sig')
+def load_data(file_path):
+    df = pd.read_csv(file_path, encoding='utf-8-sig')
     
     # Renomear colunas para facilitar
     df.columns = ['Tipo', 'Chave', 'ID', 'Resumo', 'Responsavel', 'ID_Responsavel', 
@@ -90,13 +108,18 @@ def load_data(file):
 st.title("📊 TwoBetter - Dashboard de Atividades")
 st.markdown("---")
 
-# Upload do arquivo
-uploaded_file = st.file_uploader("📁 Carregar arquivo CSV do Jira", type=['csv'])
+# Carregar CSV automaticamente da pasta data
+csv_file = get_latest_csv()
 
-if uploaded_file is not None:
-    df = load_data(uploaded_file)
+if csv_file is not None:
+    df = load_data(csv_file)
+    
+    # Mostrar qual arquivo está sendo usado
+    st.sidebar.success(f"📁 Arquivo: {csv_file.name}")
+    st.sidebar.caption(f"Última atualização: {datetime.fromtimestamp(csv_file.stat().st_mtime).strftime('%d/%m/%Y %H:%M')}")
     
     # Sidebar com filtros
+    st.sidebar.markdown("---")
     st.sidebar.header("🔍 Filtros")
     
     # Filtro de período
@@ -336,12 +359,19 @@ if uploaded_file is not None:
     )
 
 else:
-    st.info("👆 Faça upload do arquivo CSV exportado do Jira para visualizar o dashboard.")
+    st.error("⚠️ Nenhum arquivo CSV encontrado na pasta `data/`")
     
     st.markdown("""
-    ### Como exportar do Jira:
-    1. Acesse a pesquisa avançada (JQL)
-    2. Execute a query: `project = TwoBetter AND issuetype in (Task, Subtask)`
-    3. Clique em **Export** → **CSV (Current fields)**
-    4. Faça upload do arquivo aqui
+    ### Como adicionar dados:
+    
+    1. Crie uma pasta `data/` no mesmo diretório do `app.py`
+    2. Exporte do Jira usando a query JQL:
+    ```
+    project = TwoBetter AND issuetype in (Task, Subtask) ORDER BY created DESC
+    ```
+    3. Clique em **Export → CSV (Current fields)**
+    4. Coloque o arquivo `.csv` na pasta `data/`
+    5. Reinicie o dashboard
+    
+    O dashboard sempre carrega o arquivo CSV mais recente da pasta.
     """)
